@@ -2,9 +2,15 @@ mapnik-ios<br/>
 ==========<br/>
 An attempt to compile mapnik 2.2.0 for iOS.<br/>
 <br/>
-To compile, run:<br/>
+First run:<br/>
 $ git submodule init<br/>
 $ git submodule update<br/>
+<br/>
+Then apply the patch:<br/>
+$ cp ios-v2.2.0.diff mapnik/<br/>
+$ patch -p1 < ios-v2.2.0.diff<br/>
+<br/>
+To compile, run:<br/>
 $ make<br/>
 <br/>
 Note that this doesn't compile yet, see output below:<br/>
