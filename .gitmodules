@@ -1,0 +1,24 @@
+[submodule "mapnik"]
+	path = mapnik
+	url = https://github.com/mapnik/mapnik.git
+[submodule "libicu"]
+	path = libicu
+	url = https://github.com/svn2github/libicu.git
+[submodule "freetype2"]
+	path = freetype2
+	url = git://git.sv.nongnu.org/freetype/freetype2.git
+[submodule "libproj"]
+	path = libproj
+	url = git://github.com/svn2github/libproj.git
+[submodule "libpng"]
+	path = libpng
+	url = git://libpng.git.sourceforge.net/gitroot/libpng/libpng
+[submodule "libicu_host"]
+	path = libicu_host
+	url = https://github.com/svn2github/libicu.git
+[submodule "libtiff"]
+	path = libtiff
+	url = git://github.com/DaGaMs/libtiff.git
+[submodule "libjpeg"]
+	path = libjpeg
+	url = https://github.com/LuaDist/libjpeg.git
