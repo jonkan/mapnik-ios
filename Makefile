@@ -63,7 +63,7 @@ ${LIBDIR}/libmapnik.a: ${LIBDIR}/libpng.a ${LIBDIR}/libproj.a ${LIBDIR}/libtiff.
 	cd mapnik && ./configure CXX=${CXX} CC=${CC} \
 			CUSTOM_CFLAGS="${CFLAGS} -I${IOS_SDK}/usr/include/libxml2" \
             CUSTOM_CXXFLAGS="${CXXFLAGS} -DUCHAR_TYPE=uint16_t -I${IOS_SDK}/usr/include/libxml2" \
-            CUSTOM_LDFLAGS="${LDFLAGS}" \
+            CUSTOM_LDFLAGS="${LDFLAGS} -lboost_system -lboost_filesystem" \
             FREETYPE_CONFIG=${PREFIX}/bin/freetype-config \
             XML2_CONFIG=/usr/local/Cellar/libxml2/2.9.1/bin/xml2-config \
             {LTDL_INCLUDES,OCCI_INCLUDES,SQLITE_INCLUDES,RASTERLITE_INCLUDES}=. \
@@ -87,9 +87,6 @@ ${LIBDIR}/libmapnik.a: ${LIBDIR}/libpng.a ${LIBDIR}/libproj.a ${LIBDIR}/libtiff.
             RUNTIME_LINK=static \
             PREFIX=${PREFIX} && make clean install
 
-#CAIRO_INCLUDES=${PREFIX} \
-#CAIRO_LIBS=${PREFIX} \
-            
 # LibPNG
 ${LIBDIR}/libpng.a:
 	@if [! -s configure ]; then \
@@ -131,30 +128,13 @@ ${LIBDIR}/libboost_system.a: ${LIBDIR}/libicuuc.a
 	cd boost_${BOOST_VERSION2} && rm -rf boost-build boost-stage
 	cd boost_${BOOST_VERSION2} && ./bootstrap.sh --with-libraries=thread,signals,filesystem,regex,system,date_time,program_options
 	cd boost_${BOOST_VERSION2} && cp tools/build/v2/user-config.jam-bk tools/build/v2/user-config.jam
-	echo "using darwin : ${IPHONE_SDKVERSION}~iphone \n \
-			: ${CXX} -arch armv7 ${CXXFLAGS} -I${INCLUDEDIR} -L${LIBDIR} -fvisibility=hidden -fvisibility-inlines-hidden -DBOOST_AC_USE_PTHREADS -DBOOST_SP_USE_PTHREADS \n \
-			: <striper> <root>${XCODE_DEVELOPER}/Platforms/iPhoneOS.platform/Developer \n \
-			: <architecture>arm <target-os>iphone \n \
-			;" >> boost_${BOOST_VERSION2}/tools/build/v2/user-config.jam
-	cd boost_${BOOST_VERSION2} && \
-	./bjam -j16 --build-dir=boost-build --stagedir=boost-stage --prefix=${PREFIX} toolset=darwin architecture=arm target-os=iphone macosx-version=iphone-${IPHONE_SDKVERSION} define=_LITTLE_ENDIAN link=static stage && \
-	./bjam -j16 --build-dir=boost-build --stagedir=boost-stage --prefix=${PREFIX} toolset=darwin architecture=arm target-os=iphone macosx-version=iphone-${IPHONE_SDKVERSION} define=_LITTLE_ENDIAN link=static install
-
-## Boost -arch ${ARCH} -miphoneos-version-min=6.1 -std=c++11 -stdlib=libc++
-#${LIBDIR}/libboost_system.a: ${LIBDIR}/libicuuc.a
-#		rm -rf boost-build boost-stage
-#		cd boost && ./bootstrap.sh --with-libraries=thread,signals,filesystem,regex,system,date_time,program_options
-#		cd boost && git checkout tools/build/v2/user-config.jam
-#		echo "using darwin : iphone \n \
-#				: ${CXX} -miphoneos-version-min=6.1 -fvisibility=hidden -fvisibility-inlines-hidden ${CXXFLAGS} -I${INCLUDEDIR} -L${LIBDIR} \n \
-#				: <architecture>arm <target-os>iphone \n \
-#				;" >> boost/tools/build/v2/user-config.jam
-#		cd boost && ./bjam -a --build-dir=boost-build --stagedir=boost-stage --prefix=${PREFIX} toolset=darwin architecture=arm target-os=iphone  define=_LITTLE_ENDIAN link=static install
+		echo "using darwin : iphone \n \
+				: ${CXX} -miphoneos-version-min=6.1 -fvisibility=hidden -fvisibility-inlines-hidden ${CXXFLAGS} -I${INCLUDEDIR} -L${LIBDIR} \n \
+				: <architecture>arm <target-os>iphone \n \
+				;" >> boost_${BOOST_VERSION2}/tools/build/v2/user-config.jam
+		cd boost_${BOOST_VERSION2} && ./bjam -a -sICU_PATH=${PREFIX} -sICU_LINK=${LIBDIR} --build-dir=boost-build --stagedir=boost-stage --prefix=${PREFIX} toolset=darwin architecture=arm target-os=iphone  define=_LITTLE_ENDIAN link=static install
 
 ${LIBDIR}/libfreetype.a:
 	cd freetype2 && ./autogen.sh && \
 	./configure --without-zlib --without-png --without-bzip2 '--prefix=${PREFIX}' '--host=arm-apple-darwin' '--enable-static=yes' '--enable-shared=no' 'CC=${CC}' 'CFLAGS=-arch ${ARCH} -pipe -std=c99 -Wno-trigraphs -fpascal-strings -O2 -Wreturn-type -Wunused-variable -fmessage-length=0 -fvisibility=hidden -miphoneos-version-min=6.1 -I${IOS_SDK}/usr/include/libxml2/ -isysroot ${IOS_SDK}/' 'AR=${AR}' 'LDFLAGS=-arch ${ARCH} -isysroot ${IOS_SDK}/ -miphoneos-version-min=6.1' \
 	&& ${MAKE} clean && ${MAKE} && ${MAKE} install
-	#&& make clean && make && make install
-
-#./configure --without-zlib --without-png --without-bzip2 '--prefix=/usr/local/iPhone'                               '--host=arm-apple-darwin' '--enable-static=yes' '--enable-shared=no' 'CC=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang' 'CFLAGS=-arch armv7 -pipe -std=c99 -Wno-trigraphs -fpascal-strings -O2 -Wreturn-type -Wunused-variable -fmessage-length=0 -fvisibility=hidden -miphoneos-version-min=6.1 -I/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.0.sdk/usr/include/libxml2/ -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.0.sdk/' 'AR=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/ar' 'LDFLAGS=-arch armv7 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.0.sdk/ -miphoneos-version-min=6.1'
