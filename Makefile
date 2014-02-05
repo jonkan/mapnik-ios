@@ -25,7 +25,7 @@ lib/libmapnik.a: build_arches
 		#cp libsigc++/sigc++config.h include/
 		#cp build/armv7/include/cairo/*.h include/
 		#cp -R build/armv7/include/fontconfig include/
-		cp build/armv7/include/ft2build.h include
+		#cp build/armv7/include/ft2build.h include
 		cp build/armv7/include/proj_api.h include
 
 		# Make fat libraries for all architectures
@@ -63,7 +63,7 @@ ${LIBDIR}/libmapnik.a: ${LIBDIR}/libpng.a ${LIBDIR}/libproj.a ${LIBDIR}/libtiff.
 	cd mapnik && ./configure CXX=${CXX} CC=${CC} \
 			CUSTOM_CFLAGS="${CFLAGS} -I${IOS_SDK}/usr/include/libxml2" \
             CUSTOM_CXXFLAGS="${CXXFLAGS} -DUCHAR_TYPE=uint16_t -I${IOS_SDK}/usr/include/libxml2" \
-            CUSTOM_LDFLAGS="${LDFLAGS} -lboost_system -lboost_filesystem" \
+            CUSTOM_LDFLAGS="${LDFLAGS} -lboost_system -lboost_filesystem -lboost_regex" \
             FREETYPE_CONFIG=${PREFIX}/bin/freetype-config \
             XML2_CONFIG=/usr/local/Cellar/libxml2/2.9.1/bin/xml2-config \
             {LTDL_INCLUDES,OCCI_INCLUDES,SQLITE_INCLUDES,RASTERLITE_INCLUDES}=. \
@@ -112,7 +112,7 @@ libicu_host/config/icucross.mk:
 
 ${LIBDIR}/libicuuc.a: libicu_host/config/icucross.mk
 	touch ${CURDIR}/license.html
-	cd libicu && env CXX=${CXX} CC=${CC} CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS} -I${CURDIR}/libicu/tools/tzcode -DUCHAR_TYPE=uint16_t" LDFLAGS="${LDFLAGS}" ./configure --host=arm-apple-darwin --disable-shared --enable-static --prefix=${PREFIX} --with-cross-build=${CURDIR}/libicu_host && ${MAKE} clean install
+	cd libicu && env CXX=${CXX} CC=${CC} CFLAGS="${CFLAGS}" AR="${AR}" CXXFLAGS="${CXXFLAGS} -I${CURDIR}/libicu/tools/tzcode -DUCHAR_TYPE=uint16_t" LDFLAGS="${LDFLAGS}" ./configure --host=arm-apple-darwin --disable-shared --enable-static --prefix=${PREFIX} --with-cross-build=${CURDIR}/libicu_host && ${MAKE} clean install
 
 # Boost
 ${LIBDIR}/libboost_system.a: ${LIBDIR}/libicuuc.a
@@ -128,11 +128,19 @@ ${LIBDIR}/libboost_system.a: ${LIBDIR}/libicuuc.a
 	cd boost_${BOOST_VERSION2} && rm -rf boost-build boost-stage
 	cd boost_${BOOST_VERSION2} && ./bootstrap.sh --with-libraries=thread,signals,filesystem,regex,system,date_time,program_options
 	cd boost_${BOOST_VERSION2} && cp tools/build/v2/user-config.jam-bk tools/build/v2/user-config.jam
-		echo "using darwin : iphone \n \
-				: ${CXX} -miphoneos-version-min=6.1 -fvisibility=hidden -fvisibility-inlines-hidden ${CXXFLAGS} -I${INCLUDEDIR} -L${LIBDIR} \n \
+		echo "using darwin : ${IPHONE_SDKVERSION}~iphone \n \
+				: ${CXX} ${CXXFLAGS} -I${INCLUDEDIR} -L${LIBDIR} -DBOOST_AC_USE_PTHREADS -DBOOST_SP_USE_PTHREADS\n \
+				: <striper> <root>${IOS_PLATFORM_DEVELOPER} \n \
 				: <architecture>arm <target-os>iphone \n \
 				;" >> boost_${BOOST_VERSION2}/tools/build/v2/user-config.jam
-		cd boost_${BOOST_VERSION2} && ./bjam -a -sICU_PATH=${PREFIX} -sICU_LINK=${LIBDIR} --build-dir=boost-build --stagedir=boost-stage --prefix=${PREFIX} toolset=darwin architecture=arm target-os=iphone  define=_LITTLE_ENDIAN link=static install
+	cd boost_${BOOST_VERSION2} && ./bjam -a -sICU_PATH=${PREFIX} -sICU_LINK=${LIBDIR} --build-dir=boost-build --stagedir=boost-stage --prefix=${PREFIX} toolset=darwin architecture=arm target-os=iphone  define=_LITTLE_ENDIAN link=static install
+
+	#	echo "using darwin : ${IPHONE_SDKVERSION}~iphone \n \
+	#			: ${CXX} ${CXXFLAGS} -I${INCLUDEDIR} -L${LIBDIR} \n \
+	#			: <striper> <root>${IOS_PLATFORM_DEVELOPER} \n \
+	#			: <architecture>arm <target-os>iphone \n \
+	#			;" >> boost_${BOOST_VERSION2}/tools/build/v2/user-config.jam
+	#cd boost_${BOOST_VERSION2} && ./bjam -a -sICU_PATH=${PREFIX} -sICU_LINK=${LIBDIR} --build-dir=boost-build --stagedir=boost-stage --prefix=${PREFIX} toolset=darwin architecture=arm target-os=iphone  define=_LITTLE_ENDIAN link=static install
 
 ${LIBDIR}/libfreetype.a:
 	cd freetype2 && ./autogen.sh && \
