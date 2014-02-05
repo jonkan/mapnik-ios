@@ -88,8 +88,10 @@ ${LIBDIR}/libmapnik.a: ${LIBDIR}/libpng.a ${LIBDIR}/libproj.a ${LIBDIR}/libtiff.
             PREFIX=${PREFIX} && make clean install
 
 # LibPNG
-${LIBDIR}/libpng.a:
-	cd libpng && ./autogen.sh
+${LIBDIR}/libpng.a: 
+	@if [! -s libpng/configure ]; then \
+		cd libpng && ./autogen.sh; \
+	fi;
 	cd libpng && env CXX=${CXX} CC=${CC} CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" LDFLAGS="${LDFLAGS}" ./configure --host=arm-apple-darwin --disable-shared --prefix=${PREFIX} && ${MAKE} clean install
 
 # LibProj
